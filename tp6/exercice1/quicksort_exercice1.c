@@ -34,8 +34,7 @@ int partition(int *a, int lo, int hi)
     }
 }
 
-void
-quicksort(int *a, int lo, int hi)
+void quicksort(int *a, int lo, int hi)
 {
     int p;
 
@@ -47,8 +46,7 @@ quicksort(int *a, int lo, int hi)
     quicksort(a, p + 1, hi);
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     long n;
     int *a;
@@ -60,7 +58,19 @@ main(int argc, char **argv)
     if(n <= 0)
         goto usage;
 
-    a = malloc(n * sizeof(int));
+    //a = malloc(n * sizeof(int));
+    int taille_zone_memoire = n * sizeof(int);
+    void* b = mmap(
+        NULL,
+        taille_zone_memoire,
+        PROT_READ | PROT_WRITE, 
+        MAP_ANONYMOUS | MAP_SHARED,
+        -1, 0
+    );
+    if(b == MAP_FAILED){   perror("mmap"); exit(EXIT_FAILURE); }
+
+    //Casting
+    a = (int *)b;
 
     unsigned long long s = 0;
     for(int i = 0; i < n; i++) {
@@ -74,7 +84,10 @@ main(int argc, char **argv)
         assert(a[i] <= a[i + 1]);
     }
 
-    free(a);
+    //free(a);
+    int ret = munmap( b, taille_zone_memoire);
+    if(ret == -1){  perror("munmap");   exit(EXIT_FAILURE); }
+
     return 0;
 
  usage:
