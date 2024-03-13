@@ -14,31 +14,6 @@ user    0m0.177s
 sys     0m0.005s
 */
 
-int
-partition(int *a, int lo, int hi)
-{
-    int pivot = a[lo];
-    int i = lo - 1;
-    int j = hi + 1;
-    int t;
-    while(1) {
-        do {
-            i++;
-        } while(a[i] < pivot);
-
-        do {
-            j--;
-        } while(a[j] > pivot);
-
-        if(i >= j)
-            return j;
-
-        t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-    }
-}
-
 /*
 void
 quicksort(int *a, int lo, int hi)
@@ -148,6 +123,7 @@ usage:
 
 
 
+/*
 void quicksort(int *a, int lo, int hi) {
     if(lo >= hi)
         return;
@@ -174,7 +150,67 @@ void quicksort(int *a, int lo, int hi) {
     // Dans le processus parent, attendre que les deux fils terminent
     waitpid(pid1, &status, 0);
     waitpid(pid2, &status, 0);
+}*/
+
+int
+partition(int *a, int lo, int hi)
+{
+    int pivot = a[lo];
+    int i = lo - 1;
+    int j = hi + 1;
+    int t;
+    while(1) {
+        do {
+            i++;
+        } while(a[i] < pivot);
+
+        do {
+            j--;
+        } while(a[j] > pivot);
+
+        if(i >= j)
+            return j;
+
+        t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
 }
+
+void quicksort(int *a, int lo, int hi) {
+    if(lo >= hi)
+    return;
+    int p = partition(a, lo, hi);
+
+    pid_t pid1, pid2;
+    pid1 = fork();
+
+    if (pid1 < 0) {
+        perror("fork 1");
+        exit(EXIT_FAILURE);
+    } else if (pid1 == 0) {
+        // Fils 1
+        quicksort(a, lo, p);
+        exit(EXIT_SUCCESS);
+    } else {
+        // Parent
+        pid2 = fork();
+
+        if (pid2 < 0) {
+            perror("fork 2");
+            exit(EXIT_FAILURE);
+        } else if (pid2 == 0) {
+            // Fils 2
+            quicksort(a, p + 1, hi);
+            exit(EXIT_SUCCESS);
+        } else {
+            // Parent
+            waitpid(pid1, NULL, 0);
+            waitpid(pid2, NULL, 0);
+        }
+    }
+}
+
 
 int main(int argc, char **argv) {
     long n;
